@@ -13,6 +13,7 @@ job('MNTLAB-agvozdev-main-build-job') {
 			}
 		}
 		steps {
+          	shell('echo $BRANCH_NAME')
 			downstreamParameterized {
 			trigger('$BUILD_TRIGGER') {
 				block {
@@ -21,8 +22,7 @@ job('MNTLAB-agvozdev-main-build-job') {
 					failure("FAILURE")
 				}
                 parameters {
-                predefinedProp('BRANCH_NAME', '${BRANCH_NAME}')
-              	currentBuild()	
+                predefinedProp('BRANCH_NAME', '$BRANCH_NAME')
                 }
             }
         }
@@ -32,7 +32,8 @@ job('MNTLAB-agvozdev-main-build-job') {
 for (i in 1..4) {
   job("MNTLAB-agvozdev-child${i}-build-job") {
     	parameters {      
-			choiceParam('BRANCH_NAME', branches, 'Choose a branch')
+		choiceParam('BRANCH_NAME', branches, 'Choose a branch')
+//        stringParam('BRANCH_NAME', null , 'Branch')  
     }
           
 		scm {
@@ -40,12 +41,12 @@ for (i in 1..4) {
 				remote {
 					github("alekseygvozdev/d323dsl", "https")
 				}
-              branch('$BRANCH_NAME')
+              	branch('$BRANCH_NAME')
 				}
 			}
       	logRotator {
-        numToKeep(5)
-        artifactNumToKeep(1)
+        	numToKeep(5)
+        	artifactNumToKeep(1)
     }
       	wrappers {
         	preBuildCleanup {
@@ -54,7 +55,7 @@ for (i in 1..4) {
         	}
         }
 		steps {
-            shell('chmod +x script.sh; ./script.sh > output.txt; tar -czvf ${BRANCH_NAME}_dsl_script.tar.gz jobs.groovy')
+            shell('chmod +x script.sh; ./script.sh | tee -a output.txt; tar -czvf ${BRANCH_NAME}_dsl_script.tar.gz jobs.groovy')
         }
      	publishers {
 			archiveArtifacts {
